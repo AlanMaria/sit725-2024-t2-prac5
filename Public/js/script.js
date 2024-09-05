@@ -1,6 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
     M.AutoInit();  // Initialize Materialize CSS components
 
+    const socket = io();  // Initialize socket.io connection
+
     // Fetch dog parks data
     document.getElementById('fetch-data-btn').addEventListener('click', function() {
         const randomNumber = Math.floor(Math.random() * 20) + 1;
@@ -112,6 +114,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
+
+    // Listen for random number events from the server
+    socket.on('number', (msg) => {
+        console.log('Random number from server:', msg);
+    });
+
+    // Listen for messages from the server
+    socket.on('receive-message', (message) => {
+        console.log('Message from server:', message);
+        alert('Message from server: ' + message);
+    });
+
+
 
     // Load reviews when the page is ready
     loadReviews();

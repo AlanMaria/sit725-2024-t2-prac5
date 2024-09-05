@@ -1,12 +1,16 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const path = require('path');
-// const connectDB = require('./config/db');
 const adoptRoutes = require('./routes/adoptRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
-const port = 3000;
+const server = http.createServer(app);
+const io = new Server(server);  // Integrating socket.io with the server
+
+const PORT = process.env.PORT || 3000;
 
 // MongoDB connection
 mongoose.connect('mongodb://127.0.0.1:27017/dogcare')
@@ -28,7 +32,28 @@ app.use(express.static(path.join(__dirname, 'Public')));
 app.use(adoptRoutes);
 app.use(reviewRoutes);
 
-// Start the server
-app.listen(port, () => {
-    console.log(`Server is running at http://localhost:${port}`);
+// Socket.io logic
+io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    // Handle incoming messages
+    socket.on('send-message', (message) => {
+        console.log('Message received:', message);
+        io.emit('receive-message', message);  // Broadcast the message to all clients
+    });
+
+    // Emit a random number every second
+    setInterval(() => {
+        socket.emit('number', parseInt(Math.random() * 10));
+    }, 1000);
+
+    // Handle disconnection
+    socket.on('disconnect', () => {
+        console.log('User disconnected');
+    });
+});
+
+// Start the server with socket.io integration
+server.listen(PORT, () => {
+    console.log(`Server is running at http://localhost:${PORT}`);
 });
